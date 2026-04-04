@@ -1,0 +1,25 @@
+EDR ANALYSIS THEORY
+
+EDR solutions monitor user-mode API calls by placing hooks inside NTDLL.dll.
+
+These hooks intercept sensitive functions such as:
+- NtOpenProcess
+- NtReadVirtualMemory
+- NtWriteVirtualMemory
+
+Hooking is commonly implemented via:
+- Inline patching (JMP instruction)
+- IAT hooking
+- Syscall monitoring
+
+Detection Method:
+This project compares in-memory function bytes with the original disk version of NTDLL.dll.
+
+If differences are found, it indicates potential hooking.
+
+Limitations:
+- Kernel-level hooks cannot be detected
+- Memory protection may prevent reading certain regions
+
+Conclusion:
+Hook presence may indicate security monitoring (EDR/AV).
