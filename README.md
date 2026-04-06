@@ -1,16 +1,41 @@
-# EDR Hook Analizi Projesi
+# 🛡️ EDR - Endpoint Detection & Response (Hook Analysis Engine)
 
-## 📌 Proje Amacı
-Bu proje, modern EDR (Endpoint Detection & Response) sistemlerinin kullanıcı-mode API çağrılarını nasıl izlediğini analiz etmek amacıyla geliştirilmiştir. Çalışma kapsamında Windows işletim sisteminde bulunan NTDLL modülü incelenerek olası API hook işlemleri tespit edilmektedir.
+## 🚀 Proje Amacı
+Bu proje, modern EDR (Endpoint Detection & Response) sistemlerinin kullanıcı-mode API çağrılarını nasıl izlediğini analiz etmek amacıyla geliştirilmiştir.
 
----
-
-## 🧠 Proje Kapsamı
-Proje, özellikle NTDLL içerisindeki **Nt* syscall fonksiyonlarına** odaklanmaktadır. Bu fonksiyonlar kullanıcı-mode ile kernel-mode arasındaki geçişi sağladığı için EDR çözümleri tarafından sıklıkla izlenmektedir.
+Sistem, Windows işletim sisteminde bulunan **NTDLL modülü** üzerinden syscall seviyesinde analiz yaparak olası hook ve manipülasyonları tespit eder.
 
 ---
 
-## ⚙️ Yapılan Analizler
+## 🧠 Sistem Mimarisi
+
+Bu proje basit bir script değil, **modüler bir EDR pipeline** olarak tasarlanmıştır:
+[Analyzer / Agent]
+↓
+[Detection Engine]
+↓
+[Threat Classification]
+↓
+[Alert System]
+↓
+[Reporting Engine]
+
+---
+
+## ⚙️ Özellikler
+
+- 🔍 NTDLL syscall fonksiyon analizi  
+- 🧠 Detection engine (pattern + heuristic)  
+- 🚨 Alert üretim sistemi (severity bazlı)  
+- 🧬 Threat classification (MITRE ATT&CK mapping)  
+- 📊 Byte-level memory vs disk karşılaştırması  
+- 🛡️ Hook & code tampering tespiti  
+- 📄 Structured JSON + TXT raporlama  
+
+---
+
+## 🔬 Yapılan Analizler
+
 - NTDLL export fonksiyonlarının taranması  
 - Bellek (memory) ve disk üzerindeki byte karşılaştırması  
 - Syscall stub (opcode) yapısının doğrulanması  
@@ -20,46 +45,60 @@ Proje, özellikle NTDLL içerisindeki **Nt* syscall fonksiyonlarına** odaklanma
 
 ---
 
-## 🔍 Kullanılan Yöntemler
-Projede aşağıdaki teknikler kullanılmıştır:
+## 🧠 Detection Engine
 
-- PE dosya analizi (pefile kütüphanesi)  
-- ctypes ile düşük seviyeli bellek erişimi  
-- Byte seviyesinde karşılaştırma (memory vs disk)  
-- Opcode pattern analizi  
-- Heuristic (sezgisel) hook tespiti  
+Sistem aşağıdaki tehditleri tespit edebilir:
+
+- Hook edilmiş syscall fonksiyonları  
+- Kod modifikasyonu (inline patching)  
+- Anormal syscall stub yapıları  
+- Şüpheli opcode dizilimleri  
 
 ---
 
-## 📊 Örnek Çıktı
+## 🧬 MITRE ATT&CK Mapping
+
+| Threat | Technique |
+|------|--------|
+| Hook Detection | T1055 - Process Injection |
+| Code Tampering | T1562 - Defense Evasion |
+| Obfuscation | T1027 - Obfuscated Files |
+
+---
+
+## 🚨 Örnek Alert
+
+```json
+{
+  "type": "hook_detected",
+  "severity": "high",
+  "function": "NtOpenProcess",
+  "message": "Possible hook detected",
+  "mitre": "T1055"
+}
+
+📊 Örnek Çıktı
 Toplam Fonksiyon: 250
 Temiz: 248
 Hook Şüphesi: 2
 Değiştirilmiş: 0
 Okunamayan: 0
 
----
+🛠️ Kullanılan Teknolojiler
+Python
+WinAPI (ctypes)
+PE analizi (pefile)
+Düşük seviyeli bellek erişimi
 
-## ⚠️ Sınırlamalar
-- Kernel-level hook tespiti yapılamaz  
-- Bazı bellek bölgeleri işletim sistemi tarafından korunabilir  
-- Syscall stub yapısı Windows sürümüne göre değişebilir  
-- Unhooking işlemi sistem stabilitesi açısından uygulanmamış, teorik olarak ele alınmıştır  
+⚠️ Sınırlamalar
+Kernel-level hook tespiti yapılamaz
+Bazı bellek bölgeleri korunmuş olabilir
+Syscall stub yapısı Windows sürümüne göre değişebilir
+Kernel / ETW tabanlı izleme analiz dışıdır
 
----
+📌 Sonuç
+Bu çalışma, kullanıcı-mode seviyesinde API hook tespitinin mümkün olduğunu göstermektedir.
+Ancak modern EDR sistemleri kernel-level ve ETW gibi daha gelişmiş izleme teknikleri kullanmaktadır.
 
-## 🔐 Güvenlik Notu
-Bu proje yalnızca eğitim ve savunma amaçlı geliştirilmiştir. Amaç, sistem güvenliğini analiz etmek ve EDR mekanizmalarını anlamaktır.
-
----
-
-## 📌 Sonuç
-Yapılan analizler sonucunda, kullanıcı-mode API hook tespiti byte seviyesinde doğrulama ile gerçekleştirilebilmiştir. Ancak modern EDR çözümlerinin yalnızca user-mode değil, kernel-level ve ETW tabanlı izleme yöntemleri de kullandığı değerlendirilmiştir.
-
----
-
-## 🚀 Kullanılan Teknolojiler
-- Python  
-- WinAPI (ctypes)  
-- PE analizi (pefile)  
-- Düşük seviyeli bellek erişimi  
+👤 Hazırlayan
+ENES VAHİD ERDEMOĞLU
