@@ -1,11 +1,35 @@
 import json
+from datetime import datetime, UTC
 
 
-def generate_report(results, analysis):
+def generate_report(results, analysis, alerts):
+    timestamp = datetime.now(UTC).isoformat()
+
     # =========================
     # TXT REPORT (HUMAN READABLE)
     # =========================
-    report = "EDR Hook Analysis Report\n"
+    report = "EDR Detection Report\n"
+    report += "=" * 60 + "\n"
+    report += f"Timestamp: {timestamp}\n\n"
+
+    # =========================
+    # ALERT SECTION
+    # =========================
+    report += "🚨 ALERTS\n"
+    report += "=" * 60 + "\n"
+
+    if alerts:
+        for alert in alerts:
+            report += f"[{alert['severity'].upper()}] {alert['message']}\n"
+    else:
+        report += "No active threats detected.\n"
+
+    report += "\n"
+
+    # =========================
+    # DETAILED FUNCTION ANALYSIS
+    # =========================
+    report += "🔍 FUNCTION ANALYSIS\n"
     report += "=" * 60 + "\n\n"
 
     for func, data in results.items():
@@ -29,25 +53,15 @@ def generate_report(results, analysis):
                 for d in data.get("diff_sample", []):
                     report += f"  Offset {d['offset']} | MEM: {d['mem']} | DISK: {d['disk']}\n"
 
-            mem_hex = data.get("memory_hex")
-            disk_hex = data.get("disk_hex")
-
-            if mem_hex and disk_hex:
-                report += "\nMemory Bytes:\n"
-                report += mem_hex + "\n"
-
-                report += "Disk Bytes:\n"
-                report += disk_hex + "\n"
-
         else:
             report += f"Status: {data}\n"
 
         report += "\n"
 
     # =========================
-    # ANALYSIS
+    # ADVANCED ANALYSIS
     # =========================
-    report += "\n🔎 ADVANCED ANALYSIS\n"
+    report += "🔎 ADVANCED ANALYSIS\n"
     report += "=" * 60 + "\n"
     report += analysis + "\n"
 
@@ -57,25 +71,36 @@ def generate_report(results, analysis):
     report += "\n🧠 CONCLUSION\n"
     report += "=" * 60 + "\n"
     report += (
-        "This analysis compared in-memory NTDLL syscall stubs with the original disk version.\n"
-        "Byte-level differences and opcode pattern validation were used to detect potential hooks.\n"
-        "Protected memory regions may indicate OS or EDR self-defense mechanisms.\n"
-        "Kernel-level monitoring cannot be detected from user-mode.\n"
+        "This system performs user-mode hook detection by comparing in-memory syscall stubs "
+        "with their original disk counterparts.\n"
+        "Detected anomalies may indicate EDR hooking, inline patching, or malicious tampering.\n"
+        "Alerts are generated based on behavioral deviations and integrity violations.\n"
+        "Kernel-level monitoring and advanced stealth techniques may evade this detection model.\n"
     )
 
-    # TXT SAVE
-    with open("report.txt", "w", encoding="utf-8") as f:
+    # =========================
+    # SAVE TXT (FIXED 🔥)
+    # =========================
+    with open("reports/report.txt", "w", encoding="utf-8") as f:
         f.write(report)
 
-    print("📄 TXT report saved: report.txt")
+    print("📄 TXT report saved: reports/report.txt")
 
     # =========================
-    # JSON REPORT (GITHUB / TOOL)
+    # JSON REPORT
     # =========================
-    with open("report.json", "w", encoding="utf-8") as f:
-        json.dump({
-            "results": results,
-            "analysis": analysis
-        }, f, indent=4)
+    structured = {
+        "metadata": {
+            "timestamp": timestamp,
+            "total_functions": len(results),
+            "alert_count": len(alerts)
+        },
+        "alerts": alerts,
+        "results": results,
+        "analysis": analysis
+    }
 
-    print("📄 JSON report saved: report.json")
+    with open("reports/report.json", "w", encoding="utf-8") as f:
+        json.dump(structured, f, indent=4)
+
+    print("📄 JSON report saved: reports/report.json")

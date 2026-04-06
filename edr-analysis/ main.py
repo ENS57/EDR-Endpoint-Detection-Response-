@@ -1,59 +1,134 @@
-from detector import analyze_ntdll
-from analyzer import advanced_analysis
+from core.detector import analyze_ntdll
+from core.analyzer import advanced_analysis
 from report import generate_report
-from unhooker import simulate_unhook
-from bypass import analyze_bypass_surface
+from core.unhooker import simulate_unhook
+from core.bypass import analyze_bypass_surface
+
+from datetime import datetime, UTC
+import argparse
 
 
+# =========================
+# ALERT ENGINE
+# =========================
+def generate_alerts(results):
+    alerts = []
+
+    for func, data in results.items():
+        if not isinstance(data, dict):
+            continue
+
+        status = data.get("status")
+        severity = data.get("severity", "low")
+        threat = data.get("threat_type", "unknown")
+        mitre = data.get("mitre_technique")
+
+        if status == "COMPROMISED":
+            alerts.append({
+                "type": threat,
+                "severity": severity,
+                "function": func,
+                "message": f"Critical issue detected in {func}",
+                "mitre": mitre
+            })
+
+        elif status == "SUSPICIOUS":
+            alerts.append({
+                "type": threat,
+                "severity": severity,
+                "function": func,
+                "message": f"Suspicious behavior in {func}",
+                "mitre": mitre
+            })
+
+    return alerts
+
+
+# =========================
+# MAIN EDR PIPELINE
+# =========================
 def main():
-    print("🔍 EDR Hook Analysis Started...\n")
+    parser = argparse.ArgumentParser(description="EDR Detection Engine")
+
+    parser.add_argument("--only-alerts", action="store_true", help="Show only alerts")
+    parser.add_argument("--no-report", action="store_true", help="Disable report generation")
+
+    args = parser.parse_args()
+
+    print("🚀 EDR Detection Engine Started...\n")
+
+    start_time = datetime.now(UTC)
 
     # =========================
-    # ANALYSIS
+    # 1. DATA COLLECTION
     # =========================
+    print("📥 Collecting telemetry...")
     results = analyze_ntdll()
 
     # =========================
-    # SUMMARY (ÖNEMLİ)
+    # 2. DETECTION ENGINE
+    # =========================
+    print("🧠 Running detection engine...")
+    alerts = generate_alerts(results)
+
+    # =========================
+    # 3. ANALYSIS
+    # =========================
+    print("🔬 Running advanced analysis...")
+    analysis = advanced_analysis(results)
+
+    # =========================
+    # 4. RESPONSE SIMULATION
+    # =========================
+    print("🛡️ Simulating response actions...")
+    unhook = simulate_unhook(results)
+    bypass = analyze_bypass_surface(results)
+
+    # =========================
+    # 5. SUMMARY
     # =========================
     total = len(results)
-    clean = sum(1 for r in results.values() if r.get("status") == "CLEAN")
-    hooked = sum(1 for r in results.values() if r.get("status") == "HOOK_SUSPECTED")
-    modified = sum(1 for r in results.values() if r.get("status") == "MODIFIED")
-    unreadable = sum(1 for r in results.values() if r.get("status") == "UNREADABLE")
+    alert_count = len(alerts)
 
-    print("📊 SUMMARY")
-    print("=" * 40)
-    print(f"Total Functions : {total}")
-    print(f"Clean           : {clean}")
-    print(f"Hook Suspected  : {hooked}")
-    print(f"Modified        : {modified}")
-    print(f"Unreadable      : {unreadable}")
+    high = sum(1 for a in alerts if a["severity"] == "high")
+    medium = sum(1 for a in alerts if a["severity"] == "medium")
+    low = sum(1 for a in alerts if a["severity"] == "low")
 
-    # =========================
-    # ADVANCED ANALYSIS
-    # =========================
-    analysis = advanced_analysis(results)
-    print(analysis)
+    print("\n📊 EDR SUMMARY")
+    print("=" * 50)
+    print(f"Total Functions Analyzed : {total}")
+    print(f"Total Alerts             : {alert_count}")
+    print(f"High Severity            : {high}")
+    print(f"Medium Severity          : {medium}")
+    print(f"Low Severity             : {low}")
 
     # =========================
-    # UNHOOK SIMULATION
+    # 6. ALERT OUTPUT
     # =========================
-    unhook = simulate_unhook(results)
-    print(unhook)
+    print("\n🚨 ALERTS")
+    print("=" * 50)
+
+    if not alerts:
+        print("No threats detected ✅")
+
+    if args.only_alerts:
+        for alert in alerts:
+            print(f"[{alert['severity'].upper()}] {alert['message']}")
+    else:
+        for alert in alerts:
+            print(f"[{alert['severity'].upper()}] {alert['message']} ({alert['function']})")
 
     # =========================
-    # BYPASS ANALYSIS
+    # 7. REPORT
     # =========================
-    bypass = analyze_bypass_surface(results)
-    print(bypass)
+    if not args.no_report:
+        print("\n📄 Generating report...")
+        generate_report(results, analysis + unhook + bypass, alerts)
 
-    # =========================
-    # REPORT
-    # =========================
-    generate_report(results, analysis + unhook + bypass)
+    end_time = datetime.now(UTC)
 
-    print("\n📄 Report generated successfully.")
+    print("\n✅ EDR Analysis Completed")
+    print(f"⏱️ Duration: {end_time - start_time}")
 
 
 if __name__ == "__main__":
