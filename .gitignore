@@ -1,0 +1,18 @@
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE
+.idea/
+.vscode/
+
+# Reports
+reports/report.txt
+reports/report.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
